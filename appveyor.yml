@@ -1,0 +1,82 @@
+image:
+- Visual Studio 2013
+
+version: 'v{build}'
+
+pull_requests:
+  do_not_increment_build_number: true
+
+clone_folder: c:\go-dispatch-proxy
+shallow_clone: true
+clone_depth: 1
+
+test: off
+
+# Environment variables
+environment:
+  GOPATH: c:\go-dispatch-proxy
+
+# Install upx using chocolatey
+# install:
+# - cinst upx
+
+# Build for Windows, Linux & macOS (x86 + x64)
+build_script:
+  - SET GOOS=windows
+  - SET GOARCH=386
+  - go build -ldflags "-s -w" -o go-dispatch-proxy.win.x86.exe
+  
+  - SET GOARCH=amd64
+  - go build -ldflags "-s -w" -o go-dispatch-proxy.win.x64.exe
+  
+  - SET GOOS=linux
+  - SET GOARCH=386
+  - go build -ldflags "-s -w" -o go-dispatch-proxy.linux.x86
+  
+  - SET GOARCH=amd64
+  - go build -ldflags "-s -w" -o go-dispatch-proxy.linux.x64
+
+  - SET GOOS=darwin
+  - SET GOARCH=386
+  - go build -ldflags "-s -w" -o go-dispatch-proxy.macos.x86
+
+  - SET GOARCH=amd64
+  - go build -ldflags "-s -w" -o go-dispatch-proxy.macos.x64
+
+after_build:
+#  - upx -9 -o go-dispatch-proxy.exe go-dispatch-proxy.win.x86.exe
+ - ren go-dispatch-proxy.win.x86.exe go-dispatch-proxy.exe
+ - 7z a go-dispatch-proxy.win.x86.7z C:\go-dispatch-proxy\go-dispatch-proxy.exe
+ - del /q go-dispatch-proxy.exe
+
+#  - upx -9 -o go-dispatch-proxy.exe go-dispatch-proxy.win.x64.exe
+ - ren go-dispatch-proxy.win.x64.exe go-dispatch-proxy.exe 
+ - 7z a go-dispatch-proxy.win.x64.7z C:\go-dispatch-proxy\go-dispatch-proxy.exe 
+ - del /q go-dispatch-proxy.exe
+
+#  - upx -9 -o go-dispatch-proxy go-dispatch-proxy.linux.x86
+ - ren go-dispatch-proxy.linux.x86 go-dispatch-proxy
+ - 7z a go-dispatch-proxy.linux.x86.7z C:\go-dispatch-proxy\go-dispatch-proxy
+ - del /q go-dispatch-proxy
+
+#  - upx -9 -o go-dispatch-proxy go-dispatch-proxy.linux.x64
+ - ren go-dispatch-proxy.linux.x64 go-dispatch-proxy
+ - 7z a go-dispatch-proxy.linux.x64.7z C:\go-dispatch-proxy\go-dispatch-proxy 
+ - del /q go-dispatch-proxy
+ 
+ - ren go-dispatch-proxy.macos.x86 go-dispatch-proxy
+ - 7z a go-dispatch-proxy.macos.x86.7z C:\go-dispatch-proxy\go-dispatch-proxy 
+ - del /q go-dispatch-proxy
+
+ - ren go-dispatch-proxy.macos.x64 go-dispatch-proxy
+ - 7z a go-dispatch-proxy.macos.x64.7z C:\go-dispatch-proxy\go-dispatch-proxy 
+ - del /q go-dispatch-proxy
+
+# Downloadables
+artifacts:  
+  - path: go-dispatch-proxy.win.x86.7z
+  - path: go-dispatch-proxy.win.x64.7z
+  - path: go-dispatch-proxy.linux.x86.7z
+  - path: go-dispatch-proxy.linux.x64.7z
+  - path: go-dispatch-proxy.macos.x86.7z
+  - path: go-dispatch-proxy.macos.x64.7z
