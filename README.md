@@ -5,9 +5,7 @@ A SOCKS5 load balancing proxy to combine multiple internet connections into one.
 ## Rationale
 
 The idea for this project came from [dispatch-proxy](https://github.com/Morhaus/dispatch-proxy) which is written in NodeJS.
-[NodeJS is not entirely harddisk friendly considering the multitude of files it creates even for very simple programs](https://medium.com/@jdan/i-peeked-into-my-node-modules-directory-and-you-wont-believe-what-happened-next-b89f63d21558). I needed something which was light without polluting the entire drive.
-
-![](https://pbs.twimg.com/media/DEIV_1XWsAAlY29.jpg)
+[NodeJS is not entirely hard disk friendly considering the multitude of files it creates even for very simple programs](https://medium.com/@jdan/i-peeked-into-my-node-modules-directory-and-you-wont-believe-what-happened-next-b89f63d21558). I needed something which was light & portable, preferably a single binary without polluting the entire drive.
 
 ## Installation
 
