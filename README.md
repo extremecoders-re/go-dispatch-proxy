@@ -1,6 +1,6 @@
 # Go dispatch proxy
 
-A SOCKS5 load balancing proxy to combine multiple internet connections into one. Works on Windows and Linux. Untested on macOS. Written in pure Go with no additional dependencies.
+A SOCKS5 load balancing proxy to combine multiple internet connections into one. Works on Windows ~~and Linux. Untested on macOS.~~ Written in pure Go with no additional dependencies.
 
 ## Rationale
 
