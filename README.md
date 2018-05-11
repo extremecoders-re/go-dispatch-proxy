@@ -1,6 +1,6 @@
 # Go dispatch proxy
 
-A SOCKS5 load balancing proxy to combine multiple internet connections into one. Works on Windows ~~and Linux. Untested on macOS.~~ Written in pure Go with no additional dependencies.
+A SOCKS5 load balancing proxy to combine multiple internet connections into one. Works on Windows ~~and Linux~~. Untested on macOS. Written in pure Go with no additional dependencies.
 
 ## Rationale
 
@@ -67,6 +67,14 @@ $ GOOS=darwin GOARCH=386 go build
 # Compile for macos x64
 $ GOOS=darwin GOARCH=amd64 go build
 ```
+
+## No Linux Support
+
+go-dispatch-proxy doesn't support linux at the moment. You can run this tool on linux but it will not function as expected, traffic will not be load balanced across the available interfaces. This is because of how linux works.
+
+go-dispatch-proxy works by specifying the IP address (binding) to be used for each outgoing connection. Unfortunately on linux **IP address binding != interface binding**. Linux uses the route which has the lowest metric inspite of specifying the source IP address. See [this](http://wiki.treck.com/Appendix_C:_Strong_End_System_Model_/_Weak_End_System_Model) for further information.
+
+One workaround on linux is to use [`SO_BINDTODEVICE`](https://linux.die.net/man/7/socket) while creating the socket. However this reqires root to work and currently not implemented.
 
 ## Credits
 
