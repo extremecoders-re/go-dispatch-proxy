@@ -129,7 +129,6 @@ func detect_interfaces() {
 func parse_load_balancers(args []string) {
 	if len(args) == 0 {
 		log.Fatal("[FATAL] Please specify one or more load balancers")
-		return
 	}
 
 	lb_list = make([]load_balancer, flag.NArg())
@@ -138,16 +137,15 @@ func parse_load_balancers(args []string) {
 		splitted := strings.Split(a, "@")
 		var lb_ip = splitted[0]
 		if net.ParseIP(lb_ip).To4() == nil {
-			log.Fatal("[FATAL] Invalid address", lb_ip)
+			log.Fatal("[FATAL] Invalid address ", lb_ip)
 		}
-
-		if len(splitted) == 1 {
-			log.Fatal("[FATAL] Please specify contention ratio for ", lb_ip)
-		}
-
-		cont_ratio, err := strconv.Atoi(splitted[1])
-		if err != nil || cont_ratio <= 0 {
-			log.Fatal("[FATAL] Invalid contention ratio for ", lb_ip)
+		var cont_ratio int = 1
+		if len(splitted) > 1 {
+			var err error
+			cont_ratio, err = strconv.Atoi(splitted[1])
+			if err != nil || cont_ratio <= 0 {
+				log.Fatal("[FATAL] Invalid contention ratio for ", lb_ip)
+			}
 		}
 
 		log.Printf("[INFO] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip, cont_ratio)

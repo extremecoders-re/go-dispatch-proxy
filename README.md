@@ -28,7 +28,7 @@ D:\>go-dispatch-proxy.exe -list
 [+] Local Area Connection, IPv4:192.168.1.2
 ```
 
-Start `go-dispatch-proxy` specifying the IP addresses of the load balancers obtained in the previous step. Along with the IP address you also need to provide the contention ratio as shown below.
+Start `go-dispatch-proxy` specifying the IP addresses of the load balancers obtained in the previous step. Optionally, along with the IP address you may also provide the contention ratio(after by the @ symbol). If no contention ratio is specified, it's assumed as 1.
 
 ```
 D:\>go-dispatch-proxy.exe 10.81.201.18@3 192.168.1.2@2
