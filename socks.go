@@ -12,18 +12,23 @@ import (
 /*
 
  */
-func client_greeting(conn net.Conn) (byte, byte, byte, error) {
-	buf := make([]byte, 3)
+func client_greeting(conn net.Conn) (byte, []byte, error) {
+	buf := make([]byte, 2)
 
 	if nRead, err := conn.Read(buf); err != nil || nRead != len(buf) {
-		return 0, 0, 0, errors.New("Client greeting failed")
+		return 0, nil, errors.New("Client greeting failed")
 	}
 
 	socks_version := buf[0]
 	num_auth_methods := buf[1]
-	auth_method := buf[2]
 
-	return socks_version, num_auth_methods, auth_method, nil
+	auth_methods := make([]byte, num_auth_methods)
+
+	if nRead, err := conn.Read(auth_methods); err != nil || nRead != int(num_auth_methods) {
+		return 0, nil, errors.New("Client greeting failed")
+	}
+
+	return socks_version, auth_methods, nil
 }
 
 /*
@@ -126,7 +131,7 @@ func client_conection_request(conn net.Conn) (string, error) {
  */
 func Handle_socks_connection(conn net.Conn) (string, error) {
 
-	if _, _, _, err := client_greeting(conn); err != nil {
+	if _, _, err := client_greeting(conn); err != nil {
 		log.Println(err)
 		return "", err
 	}
