@@ -30,11 +30,25 @@ D:\>go-dispatch-proxy.exe -list
 
 Start `go-dispatch-proxy` specifying the IP addresses of the load balancers obtained in the previous step. Optionally, along with the IP address you may also provide the contention ratio(after by the @ symbol). If no contention ratio is specified, it's assumed as 1.
 
+**Example 1**
+
+SOCKS proxy running on localhost at default port. Contention ratio is specified.
 ```
 D:\>go-dispatch-proxy.exe 10.81.201.18@3 192.168.1.2@2
-2018/05/09 15:57:50 [+] Load balancer 1: 10.81.201.18, contention ratio: 3
-2018/05/09 15:57:50 [+] Load balancer 2: 192.168.1.2, contention ratio: 2
-2018/05/09 15:57:50 [+] SOCKS server started at 127.0.0.1:8080
+[INFO] Load balancer 1: 10.81.201.18, contention ratio: 3
+[INFO] Load balancer 2: 192.168.1.2, contention ratio: 2
+[INFO] SOCKS server started at 127.0.0.1:8080
+```
+
+**Example 2**
+
+SOCKS proxy running on a different interface at a custom port. Contention ratio is not specified.
+
+```
+D:\>go-dispatch-proxy.exe -lhost 192.168.1.2 -lport 5566 10.81.177.215 192.168.1.100
+[INFO] Load balancer 1: 10.81.177.215, contention ratio: 1
+[INFO] Load balancer 2: 192.168.1.100, contention ratio: 1
+[INFO] SOCKS server started at 192.168.1.2:5566
 ```
 
 Out of 5 consecutive connections, the first 3 are routed to `10.81.201.18` and the remaining 2 to `192.168.1.2`. The SOCKS server is started by default on `127.0.0.1:8080`. It can be changed using the `-lhost` and `lport` directive.
