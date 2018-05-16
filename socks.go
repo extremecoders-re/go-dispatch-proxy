@@ -16,7 +16,7 @@ func client_greeting(conn net.Conn) (byte, []byte, error) {
 	buf := make([]byte, 2)
 
 	if nRead, err := conn.Read(buf); err != nil || nRead != len(buf) {
-		return 0, nil, errors.New("Client greeting failed")
+		return 0, nil, errors.New("[WARN] client greeting failed")
 	}
 
 	socks_version := buf[0]
@@ -25,7 +25,7 @@ func client_greeting(conn net.Conn) (byte, []byte, error) {
 	auth_methods := make([]byte, num_auth_methods)
 
 	if nRead, err := conn.Read(auth_methods); err != nil || nRead != int(num_auth_methods) {
-		return 0, nil, errors.New("Client greeting failed")
+		return 0, nil, errors.New("[WARN] client greeting failed")
 	}
 
 	return socks_version, auth_methods, nil
@@ -37,7 +37,7 @@ func client_greeting(conn net.Conn) (byte, []byte, error) {
 func servers_choice(conn net.Conn) error {
 
 	if nWrite, err := conn.Write([]byte{5, 0}); err != nil || nWrite != 2 {
-		return errors.New("Servers choice failed")
+		return errors.New("[WARN] servers choice failed")
 	}
 	return nil
 }
@@ -53,7 +53,7 @@ func client_conection_request(conn net.Conn) (string, error) {
 	if nRead, err := conn.Read(header); err != nil || nRead != len(header) {
 		conn.Write([]byte{5, SERVER_FAILURE, 0, 1, 0, 0, 0, 0, 0, 0})
 		conn.Close()
-		return "", errors.New("Client connection request failed")
+		return "", errors.New("[WARN] client connection request failed")
 	}
 
 	socks_version := header[0]
@@ -64,13 +64,13 @@ func client_conection_request(conn net.Conn) (string, error) {
 	if socks_version != 5 {
 		conn.Write([]byte{5, SERVER_FAILURE, 0, 1, 0, 0, 0, 0, 0, 0})
 		conn.Close()
-		return "", errors.New("Unsupported SOCKS version")
+		return "", errors.New("[WARN] unsupported SOCKS version")
 	}
 
 	if cmd_code != CONNECT {
 		conn.Write([]byte{5, COMMAND_NOT_SUPPORTED, 0, 1, 0, 0, 0, 0, 0, 0})
 		conn.Close()
-		return "", errors.New("Unsupported command code")
+		return "", errors.New("[WARN] unsupported command code")
 	}
 
 	switch address_type {
@@ -80,13 +80,13 @@ func client_conection_request(conn net.Conn) (string, error) {
 		if nRead, err := conn.Read(ipv4_address); err != nil || nRead != len(ipv4_address) {
 			conn.Write([]byte{5, SERVER_FAILURE, 0, 1, 0, 0, 0, 0, 0, 0})
 			conn.Close()
-			return "", errors.New("Client connection request failed")
+			return "", errors.New("[WARN] client connection request failed")
 		}
 
 		if nRead, err := conn.Read(port); err != nil || nRead != len(port) {
 			conn.Write([]byte{5, SERVER_FAILURE, 0, 1, 0, 0, 0, 0, 0, 0})
 			conn.Close()
-			return "", errors.New("Client connection request failed")
+			return "", errors.New("[WARN] client connection request failed")
 		}
 		address = fmt.Sprintf("%d.%d.%d.%d:%d", ipv4_address[0],
 			ipv4_address[1],
@@ -100,7 +100,7 @@ func client_conection_request(conn net.Conn) (string, error) {
 		if nRead, err := conn.Read(domain_name_length); err != nil || nRead != len(domain_name_length) {
 			conn.Write([]byte{5, SERVER_FAILURE, 0, 1, 0, 0, 0, 0, 0, 0})
 			conn.Close()
-			return "", errors.New("Client connection request failed")
+			return "", errors.New("[WARN] client connection request failed")
 		}
 
 		domain_name := make([]byte, domain_name_length[0])
@@ -108,20 +108,20 @@ func client_conection_request(conn net.Conn) (string, error) {
 		if nRead, err := conn.Read(domain_name); err != nil || nRead != len(domain_name) {
 			conn.Write([]byte{5, SERVER_FAILURE, 0, 1, 0, 0, 0, 0, 0, 0})
 			conn.Close()
-			return "", errors.New("Client connection request failed")
+			return "", errors.New("[WARN] client connection request failed")
 		}
 
 		if nRead, err := conn.Read(port); err != nil || nRead != len(port) {
 			conn.Write([]byte{5, SERVER_FAILURE, 0, 1, 0, 0, 0, 0, 0, 0})
 			conn.Close()
-			return "", errors.New("Client connection request failed")
+			return "", errors.New("[WARN] client connection request failed")
 		}
 		address = fmt.Sprintf("%s:%d", string(domain_name), binary.BigEndian.Uint16(port))
 
 	default:
 		conn.Write([]byte{5, ADDRTYPE_NOT_SUPPORTED, 0, 1, 0, 0, 0, 0, 0, 0})
 		conn.Close()
-		return "", errors.New("Unsupported address type")
+		return "", errors.New("[WARN] unsupported address type")
 	}
 	return address, nil
 }

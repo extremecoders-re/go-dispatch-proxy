@@ -81,12 +81,12 @@ func server_response(local_conn net.Conn, address string) {
 	remote_conn, err := net.DialTCP("tcp4", local_addr, remote_addr)
 
 	if err != nil {
-		log.Println("[!]", address, "->", load_balancer_addr, err)
+		log.Println("[WARN]", address, "->", load_balancer_addr, fmt.Sprintf("{%s}", err))
 		local_conn.Write([]byte{5, NETWORK_UNREACHABLE, 0, 1, 0, 0, 0, 0, 0, 0})
 		local_conn.Close()
 		return
 	}
-	log.Println(address, "->", load_balancer_addr)
+	log.Println("[DEBUG]", address, "->", load_balancer_addr)
 	local_conn.Write([]byte{5, SUCCESS, 0, 1, 0, 0, 0, 0, 0, 0})
 	forward_connections(local_conn, remote_conn)
 }
@@ -128,7 +128,7 @@ func detect_interfaces() {
 */
 func parse_load_balancers(args []string) {
 	if len(args) == 0 {
-		log.Fatal("[!] Please specify one or more load balancers")
+		log.Fatal("[FATAL] Please specify one or more load balancers")
 		return
 	}
 
@@ -138,19 +138,19 @@ func parse_load_balancers(args []string) {
 		splitted := strings.Split(a, "@")
 		var lb_ip = splitted[0]
 		if net.ParseIP(lb_ip).To4() == nil {
-			log.Fatal("[!] Invalid address", lb_ip)
+			log.Fatal("[FATAL] Invalid address", lb_ip)
 		}
 
 		if len(splitted) == 1 {
-			log.Fatal("[!] Please specify contention ratio for ", lb_ip)
+			log.Fatal("[FATAL] Please specify contention ratio for ", lb_ip)
 		}
 
 		cont_ratio, err := strconv.Atoi(splitted[1])
 		if err != nil || cont_ratio <= 0 {
-			log.Fatal("[!] Invalid contention ratio for ", lb_ip)
+			log.Fatal("[FATAL] Invalid contention ratio for ", lb_ip)
 		}
 
-		log.Printf("[+] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip, cont_ratio)
+		log.Printf("[INFO] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip, cont_ratio)
 		lb_list[idx] = load_balancer{address: fmt.Sprintf("%s:0", lb_ip), contention_ratio: cont_ratio, current_connections: 0}
 	}
 }
@@ -169,14 +169,17 @@ func main() {
 		return
 	}
 
+	// Disable timestamp in log messages
+	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+
 	// Check for valid IP
 	if net.ParseIP(*lhost).To4() == nil {
-		log.Fatal("[!] Invalid host ", *lhost)
+		log.Fatal("[FATAL] Invalid host ", *lhost)
 	}
 
 	// Check for valid port
 	if *lport < 1 || *lport > 65535 {
-		log.Fatal("[!] Invalid port ", *lport)
+		log.Fatal("[FATAL] Invalid port ", *lport)
 	}
 
 	//Parse remaining string to get addresses of load balancers
@@ -187,9 +190,9 @@ func main() {
 	// Start SOCKS server
 	l, err := net.Listen("tcp4", local_bind_address)
 	if err != nil {
-		log.Fatalln("[!] Could not start SOCKS server at", local_bind_address)
+		log.Fatalln("[FATAL] Could not start SOCKS server at", local_bind_address)
 	}
-	log.Println("[+] SOCKS server started at", local_bind_address)
+	log.Println("[INFO] SOCKS server started at", local_bind_address)
 	defer l.Close()
 
 	mutex = &sync.Mutex{}
