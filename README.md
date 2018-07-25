@@ -60,7 +60,7 @@ Now change the proxy settings of your browser, download manager etc to point to 
 Ensure that Go is installed and available on the system path.
 
 ```sh
-$ git clone https://bitbucket.org/extremecoders-re/go-dispatch-proxy
+$ git clone https://github.com/extremecoders-re/go-dispatch-proxy.git
 $ cd go-dispatch-proxy
 
 # Compile for Windows x86
