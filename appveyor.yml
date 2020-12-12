@@ -37,9 +37,6 @@ build_script:
   - go build -ldflags "-s -w" -o go-dispatch-proxy.linux.x64
 
   - SET GOOS=darwin
-  - SET GOARCH=386
-  - go build -ldflags "-s -w" -o go-dispatch-proxy.macos.x86
-
   - SET GOARCH=amd64
   - go build -ldflags "-s -w" -o go-dispatch-proxy.macos.x64
 

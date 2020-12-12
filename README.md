@@ -113,9 +113,6 @@ $ GOOS=linux GOARCH=386 go build
 # Compile for Linux x64
 $ GOOS=linux GOARCH=amd64 go build
 
-# Compile for macos x86
-$ GOOS=darwin GOARCH=386 go build
-
 # Compile for macos x64
 $ GOOS=darwin GOARCH=amd64 go build
 ```
