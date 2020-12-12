@@ -61,10 +61,6 @@ after_build:
  - 7z a go-dispatch-proxy.linux.x64.7z C:\go-dispatch-proxy\go-dispatch-proxy 
  - del /q go-dispatch-proxy
  
- - ren go-dispatch-proxy.macos.x86 go-dispatch-proxy
- - 7z a go-dispatch-proxy.macos.x86.7z C:\go-dispatch-proxy\go-dispatch-proxy 
- - del /q go-dispatch-proxy
-
  - ren go-dispatch-proxy.macos.x64 go-dispatch-proxy
  - 7z a go-dispatch-proxy.macos.x64.7z C:\go-dispatch-proxy\go-dispatch-proxy 
  - del /q go-dispatch-proxy
