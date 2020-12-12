@@ -48,9 +48,9 @@ func get_load_balancer() string {
 }
 
 /*
-	Joins the local and remote connections together.
+	Joins the local and remote connections together
 */
-func forward_connections(local_conn, remote_conn net.Conn) {
+func pipe_connections(local_conn, remote_conn net.Conn) {
 	go func() {
 		defer remote_conn.Close()
 		defer local_conn.Close()
@@ -71,8 +71,8 @@ func forward_connections(local_conn, remote_conn net.Conn) {
 }
 
 /*
-
- */
+	Implements servers response of SOCKS5
+*/
 func server_response(local_conn net.Conn, address string) {
 	load_balancer_addr := get_load_balancer()
 
@@ -88,20 +88,41 @@ func server_response(local_conn net.Conn, address string) {
 	}
 	log.Println("[DEBUG]", address, "->", load_balancer_addr)
 	local_conn.Write([]byte{5, SUCCESS, 0, 1, 0, 0, 0, 0, 0, 0})
-	forward_connections(local_conn, remote_conn)
+	pipe_connections(local_conn, remote_conn)
 }
 
 /*
+	Handle connections in tunnel mode
+*/
+func handle_tunnel_connection(conn net.Conn) {
+	load_balancer_addr := get_load_balancer()
 
- */
-func handle_connection(conn net.Conn) {
-	if address, err := Handle_socks_connection(conn); err == nil {
+	remote_addr, _ := net.ResolveTCPAddr("tcp4", load_balancer_addr)
+	remote_conn, err := net.DialTCP("tcp4", nil, remote_addr)
+
+	if err != nil {
+		log.Println("[WARN]", load_balancer_addr, fmt.Sprintf("{%s}", err))
+		conn.Close()
+		return
+	}
+
+	log.Println("[DEBUG] Tunnelled to", load_balancer_addr)
+	pipe_connections(conn, remote_conn)
+}
+
+/*
+	Calls the apprpriate handle_connections based on tunnel mode
+*/
+func handle_connection(conn net.Conn, tunnel bool) {
+	if tunnel {
+		handle_tunnel_connection(conn)
+	} else if address, err := Handle_socks_connection(conn); err == nil {
 		server_response(conn, address)
 	}
 }
 
 /*
-	Detect the addresses which can  be used for dispatching.
+	Detect the addresses which can  be used for dispatching in non-tunnelling mode.
 	Alternate to ipconfig/ifconfig
 */
 func detect_interfaces() {
@@ -126,7 +147,7 @@ func detect_interfaces() {
 /*
 	Parses the command line arguements to obtain the list of load balancers
 */
-func parse_load_balancers(args []string) {
+func parse_load_balancers(args []string, tunnel bool) {
 	if len(args) == 0 {
 		log.Fatal("[FATAL] Please specify one or more load balancers")
 	}
@@ -135,13 +156,34 @@ func parse_load_balancers(args []string) {
 
 	for idx, a := range args {
 		splitted := strings.Split(a, "@")
-		var lb_ip = splitted[0]
+		var lb_ip string
+		var lb_port int
+		var err error
+
+		if tunnel {
+			ip_port := strings.Split(splitted[0], ":")
+			if len(ip_port) != 2 {
+				log.Fatal("[FATAL] Invalid address specification ", splitted[0])
+				return
+			}
+
+			lb_ip = ip_port[0]
+			lb_port, err = strconv.Atoi(ip_port[1])
+			if err != nil || lb_port <= 0 || lb_port > 65535 {
+				log.Fatal("[FATAL] Invalid port ", splitted[0])
+				return
+			}
+
+		} else {
+			lb_ip = splitted[0]
+			lb_port = 0
+		}
+
 		if net.ParseIP(lb_ip).To4() == nil {
 			log.Fatal("[FATAL] Invalid address ", lb_ip)
 		}
 		var cont_ratio int = 1
 		if len(splitted) > 1 {
-			var err error
 			cont_ratio, err = strconv.Atoi(splitted[1])
 			if err != nil || cont_ratio <= 0 {
 				log.Fatal("[FATAL] Invalid contention ratio for ", lb_ip)
@@ -149,7 +191,7 @@ func parse_load_balancers(args []string) {
 		}
 
 		log.Printf("[INFO] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip, cont_ratio)
-		lb_list[idx] = load_balancer{address: fmt.Sprintf("%s:0", lb_ip), contention_ratio: cont_ratio, current_connections: 0}
+		lb_list[idx] = load_balancer{address: fmt.Sprintf("%s:%d", lb_ip, lb_port), contention_ratio: cont_ratio, current_connections: 0}
 	}
 }
 
@@ -157,9 +199,10 @@ func parse_load_balancers(args []string) {
 	Main function
 */
 func main() {
-	var lhost = flag.String("lhost", "127.0.0.1", "the host to listen for SOCKS connection")
-	var lport = flag.Int("lport", 8080, "the local port to listen for SOCKS connection")
-	var detect = flag.Bool("list", false, "shows the available addresses for dispatching ")
+	var lhost = flag.String("lhost", "127.0.0.1", "The host to listen for SOCKS connection")
+	var lport = flag.Int("lport", 8080, "The local port to listen for SOCKS connection")
+	var detect = flag.Bool("list", false, "Shows the available addresses for dispatching (non-tunnelling mode only)")
+	var tunnel = flag.Bool("tunnel", false, "Use tunnelling mode (acts as a transparent load balancing proxy)")
 
 	flag.Parse()
 	if *detect {
@@ -181,21 +224,21 @@ func main() {
 	}
 
 	//Parse remaining string to get addresses of load balancers
-	parse_load_balancers(flag.Args())
+	parse_load_balancers(flag.Args(), *tunnel)
 
 	local_bind_address := fmt.Sprintf("%s:%d", *lhost, *lport)
 
-	// Start SOCKS server
+	// Start local server
 	l, err := net.Listen("tcp4", local_bind_address)
 	if err != nil {
-		log.Fatalln("[FATAL] Could not start SOCKS server at", local_bind_address)
+		log.Fatalln("[FATAL] Could not start local server on ", local_bind_address)
 	}
-	log.Println("[INFO] SOCKS server started at", local_bind_address)
+	log.Println("[INFO] Local server started on ", local_bind_address)
 	defer l.Close()
 
 	mutex = &sync.Mutex{}
 	for {
 		conn, _ := l.Accept()
-		go handle_connection(conn)
+		go handle_connection(conn, *tunnel)
 	}
 }
