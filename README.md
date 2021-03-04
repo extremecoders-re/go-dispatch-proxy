@@ -1,6 +1,6 @@
 # Go dispatch proxy
 
-A SOCKS5 load balancing proxy to combine multiple internet connections into one. Works on Windows and Linux (partial support, see below). [Reported to work on macOS](https://github.com/extremecoders-re/go-dispatch-proxy/issues/1). Written in pure Go with no additional dependencies.
+A SOCKS5 load balancing proxy to combine multiple internet connections into one. Works on Windows and Linux (full support, see details below). [Reported to work on macOS](https://github.com/extremecoders-re/go-dispatch-proxy/issues/1). Written in pure Go with no additional dependencies.
 
 It can also be used as a transparent proxy to load balance multiple SSH tunnels.
 
@@ -92,6 +92,20 @@ D:\> go-dispatch-proxy.exe -lport 5555 -tunnel 127.0.0.1:7777@1 127.0.0.1:7778@3
 
 The `lport` if not specified defaults to 8080. This is the port where you need to point your web browser, download manager etc. Be sure to add this as a SOCKS v5 proxy.
 
+## Full Linux Support [NEW]
+
+Go-dispatch-proxy now supports Linux in both normal mode and tunnel mode. On Linux, Go-dispatch-proxy uses the `SO_BINDTODEVICE` syscall to bind to the interface corresponding to the load balancer IPs. As a result, the binary must be run with `root` privilege OR by giving it the necessary capabilities as shown below.
+
+```
+$ sudo ./go-dispatch-proxy
+```
+
+OR (Recommended)
+
+```
+$ sudo setcap cap_net_raw=eip ./go-dispatch-proxy
+$ ./go-dispatch-proxy
+```
 
 ## Compiling (For Development)
 
@@ -116,16 +130,6 @@ $ GOOS=linux GOARCH=amd64 go build
 # Compile for macos x64
 $ GOOS=darwin GOARCH=amd64 go build
 ```
-
-## Partial Linux Support
-
-Go-dispatch-proxy supports linux only if used as a transparent proxy (tunnel mode) to load balance SSH tunnels.
-
-Go-dispatch-proxy can't load balance internet connections on linux. You can run this tool on linux but it will not function as expected, traffic will not be load balanced across the available interfaces. This is because of how linux works.
-
-Go-dispatch-proxy works by specifying the IP address (binding) to be used for each outgoing connection. Unfortunately on linux **IP address binding != interface binding**. Linux uses the route which has the lowest metric inspite of specifying the source IP address. See [this](http://wiki.treck.com/Appendix_C:_Strong_End_System_Model_/_Weak_End_System_Model) for further information.
-
-One workaround on linux is to use [`SO_BINDTODEVICE`](https://linux.die.net/man/7/socket) while creating the socket. However this reqires root to work and currently not implemented.
 
 ## Credits
 

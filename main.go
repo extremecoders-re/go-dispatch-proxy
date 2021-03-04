@@ -14,6 +14,7 @@ import (
 
 type load_balancer struct {
 	address             string
+	iface               string
 	contention_ratio    int
 	current_connections int
 }
@@ -30,7 +31,7 @@ var mutex *sync.Mutex
 /*
 	Get a load balancer according to contention ratio
 */
-func get_load_balancer() string {
+func get_load_balancer() *load_balancer {
 	mutex.Lock()
 	lb := &lb_list[lb_index]
 	lb.current_connections += 1
@@ -44,7 +45,7 @@ func get_load_balancer() string {
 		}
 	}
 	mutex.Unlock()
-	return lb.address
+	return lb
 }
 
 /*
@@ -71,42 +72,21 @@ func pipe_connections(local_conn, remote_conn net.Conn) {
 }
 
 /*
-	Implements servers response of SOCKS5
-*/
-func server_response(local_conn net.Conn, address string) {
-	load_balancer_addr := get_load_balancer()
-
-	local_addr, _ := net.ResolveTCPAddr("tcp4", load_balancer_addr)
-	remote_addr, _ := net.ResolveTCPAddr("tcp4", address)
-	remote_conn, err := net.DialTCP("tcp4", local_addr, remote_addr)
-
-	if err != nil {
-		log.Println("[WARN]", address, "->", load_balancer_addr, fmt.Sprintf("{%s}", err))
-		local_conn.Write([]byte{5, NETWORK_UNREACHABLE, 0, 1, 0, 0, 0, 0, 0, 0})
-		local_conn.Close()
-		return
-	}
-	log.Println("[DEBUG]", address, "->", load_balancer_addr)
-	local_conn.Write([]byte{5, SUCCESS, 0, 1, 0, 0, 0, 0, 0, 0})
-	pipe_connections(local_conn, remote_conn)
-}
-
-/*
 	Handle connections in tunnel mode
 */
 func handle_tunnel_connection(conn net.Conn) {
-	load_balancer_addr := get_load_balancer()
+	load_balancer := get_load_balancer()
 
-	remote_addr, _ := net.ResolveTCPAddr("tcp4", load_balancer_addr)
+	remote_addr, _ := net.ResolveTCPAddr("tcp4", load_balancer.address)
 	remote_conn, err := net.DialTCP("tcp4", nil, remote_addr)
 
 	if err != nil {
-		log.Println("[WARN]", load_balancer_addr, fmt.Sprintf("{%s}", err))
+		log.Println("[WARN]", load_balancer.address, fmt.Sprintf("{%s}", err))
 		conn.Close()
 		return
 	}
 
-	log.Println("[DEBUG] Tunnelled to", load_balancer_addr)
+	log.Println("[DEBUG] Tunnelled to", load_balancer.address)
 	pipe_connections(conn, remote_conn)
 }
 
@@ -116,7 +96,7 @@ func handle_tunnel_connection(conn net.Conn) {
 func handle_connection(conn net.Conn, tunnel bool) {
 	if tunnel {
 		handle_tunnel_connection(conn)
-	} else if address, err := Handle_socks_connection(conn); err == nil {
+	} else if address, err := handle_socks_connection(conn); err == nil {
 		server_response(conn, address)
 	}
 }
@@ -142,6 +122,29 @@ func detect_interfaces() {
 		}
 	}
 
+}
+
+/*
+	Gets the interface associated with the IP
+*/
+func get_iface_from_ip(ip string) string {
+	ifaces, _ := net.Interfaces()
+
+	for _, iface := range ifaces {
+		if (iface.Flags&net.FlagUp == net.FlagUp) && (iface.Flags&net.FlagLoopback != net.FlagLoopback) {
+			addrs, _ := iface.Addrs()
+			for _, addr := range addrs {
+				if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+					if ipnet.IP.To4() != nil {
+						if ipnet.IP.String() == ip {
+							return iface.Name + "\x00"
+						}
+					}
+				}
+			}
+		}
+	}
+	return ""
 }
 
 /*
@@ -190,8 +193,13 @@ func parse_load_balancers(args []string, tunnel bool) {
 			}
 		}
 
+		iface := get_iface_from_ip(lb_ip)
+		if iface == "" {
+			log.Fatal("[FATAL] IP address not associated with an interface ", lb_ip)
+		}
+
 		log.Printf("[INFO] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip, cont_ratio)
-		lb_list[idx] = load_balancer{address: fmt.Sprintf("%s:%d", lb_ip, lb_port), contention_ratio: cont_ratio, current_connections: 0}
+		lb_list[idx] = load_balancer{address: fmt.Sprintf("%s:%d", lb_ip, lb_port), iface: iface, contention_ratio: cont_ratio, current_connections: 0}
 	}
 }
 

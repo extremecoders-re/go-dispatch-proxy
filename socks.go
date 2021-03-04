@@ -129,7 +129,7 @@ func client_conection_request(conn net.Conn) (string, error) {
 /*
 
  */
-func Handle_socks_connection(conn net.Conn) (string, error) {
+func handle_socks_connection(conn net.Conn) (string, error) {
 
 	if _, _, err := client_greeting(conn); err != nil {
 		log.Println(err)
