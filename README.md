@@ -1,19 +1,17 @@
 # Go dispatch proxy
 
-A SOCKS5 load balancing proxy to combine multiple internet connections into one. Works on Windows and Linux (full support, see details below). [Reported to work on macOS](https://github.com/extremecoders-re/go-dispatch-proxy/issues/1). Written in pure Go with no additional dependencies.
+A SOCKS5 load balancing proxy to combine multiple internet connections into one. Works on Windows and Linux. [Reported to work on macOS](https://github.com/extremecoders-re/go-dispatch-proxy/issues/1). Written in pure Go with no additional dependencies.
 
 It can also be used as a transparent proxy to load balance multiple SSH tunnels.
 
 ## Rationale
 
 The idea for this project came from [dispatch-proxy](https://github.com/Morhaus/dispatch-proxy) which is written in NodeJS.
-[NodeJS is not entirely hard disk friendly considering the multitude of files it creates even for very simple programs](https://medium.com/@jdan/i-peeked-into-my-node-modules-directory-and-you-wont-believe-what-happened-next-b89f63d21558). I needed something which was light & portable, preferably a single binary without polluting the entire drive.
+[NodeJS is not entirely disk friendly considering the multitude of files it creates even for very simple programs](https://medium.com/@jdan/i-peeked-into-my-node-modules-directory-and-you-wont-believe-what-happened-next-b89f63d21558). I needed something light & portable, preferably a single binary without polluting the entire drive.
 
 ## Installation
 
-No installation required. Grab the latest binary for your platform from the CI server or from [releases](https://github.com/extremecoders-re/go-dispatch-proxy/releases) and start speeding up your internet connection!
-
-https://ci.appveyor.com/project/extremecoders-re/go-dispatch-proxy/build/artifacts
+No installation required. Grab the latest binary for your platform from the [CI server](https://ci.appveyor.com/project/extremecoders-re/go-dispatch-proxy/build/artifacts) or from [releases](https://github.com/extremecoders-re/go-dispatch-proxy/releases) and start speeding up your internet connection!
 
 [![Build status](https://ci.appveyor.com/api/projects/status/nll4hvpdjlfsp7mu?svg=true)](https://ci.appveyor.com/project/extremecoders-re/go-dispatch-proxy/build/artifacts)
 
@@ -32,13 +30,13 @@ D:\>go-dispatch-proxy.exe -list
 [+] Local Area Connection, IPv4:192.168.1.2
 ```
 
-Start `go-dispatch-proxy` specifying the IP addresses of the load balancers obtained in the previous step. Optionally, along with the IP address you may also provide the contention ratio(after by the @ symbol). If no contention ratio is specified, it's assumed as 1.
+Start `go-dispatch-proxy` specifying the IP addresses of the load balancers obtained in the previous step. Optionally, along with the IP address you may also provide the contention ratio(after the @ symbol). If no contention ratio is specified, it's assumed as 1.
 
 ### 2 - Load balance SSH tunnels
 
 The tool can load balance multiple SSH tunnels. See Example 3 for usage.
 
-**Example 1**
+### Example 1
 
 SOCKS proxy running on localhost at default port. Contention ratio is specified.
 ```
@@ -48,7 +46,7 @@ D:\>go-dispatch-proxy.exe 10.81.201.18@3 192.168.1.2@2
 [INFO] SOCKS server started at 127.0.0.1:8080
 ```
 
-**Example 2**
+### Example 2
 
 SOCKS proxy running on a different interface at a custom port. Contention ratio is not specified.
 
@@ -63,7 +61,7 @@ Out of 5 consecutive connections, the first 3 are routed to `10.81.201.18` and t
 
 Now change the proxy settings of your browser, download manager etc to point to the above address (eg `127.0.0.1:8080`). Be sure to add this as a SOCKS v5 proxy and NOT as a HTTP/S proxy.
 
-**Example 3**
+### Example 3
 
 The tool can be used to load balance multiple SSH tunnels. In this mode, go-dispatch-proxy acts as a transparent load balancing proxy. 
 
@@ -94,7 +92,7 @@ The `lport` if not specified defaults to 8080. This is the port where you need t
 
 ## Full Linux Support [NEW]
 
-Go-dispatch-proxy now supports Linux in both normal mode and tunnel mode. On Linux, Go-dispatch-proxy uses the `SO_BINDTODEVICE` syscall to bind to the interface corresponding to the load balancer IPs. As a result, the binary must be run with `root` privilege OR by giving it the necessary capabilities as shown below.
+Go-dispatch-proxy now supports Linux in both normal mode and tunnel mode. On Linux, Go-dispatch-proxy uses the `SO_BINDTODEVICE` syscall to bind to the interface corresponding to the load balancer IPs. As a result, the binary must be run with `root` privilege or by giving it the necessary capabilities as shown below.
 
 ```
 $ sudo ./go-dispatch-proxy
@@ -127,7 +125,7 @@ $ GOOS=linux GOARCH=386 go build
 # Compile for Linux x64
 $ GOOS=linux GOARCH=amd64 go build
 
-# Compile for macos x64
+# Compile for Macos x64
 $ GOOS=darwin GOARCH=amd64 go build
 ```
 
