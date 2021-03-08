@@ -92,7 +92,7 @@ The `lport` if not specified defaults to 8080. This is the port where you need t
 
 ## Full Linux Support [NEW]
 
-Go-dispatch-proxy now supports Linux in both normal mode and tunnel mode. On Linux, Go-dispatch-proxy uses the `SO_BINDTODEVICE` syscall to bind to the interface corresponding to the load balancer IPs. As a result, the binary must be run with `root` privilege or by giving it the necessary capabilities as shown below.
+Go-dispatch-proxy now supports Linux in both normal mode and tunnel mode. On Linux normal mode, Go-dispatch-proxy uses the `SO_BINDTODEVICE` syscall to bind to the interface corresponding to the load balancer IPs. As a result, the binary must be run with `root` privilege or by giving it the necessary capabilities as shown below.
 
 ```
 $ sudo ./go-dispatch-proxy
@@ -104,6 +104,8 @@ OR (Recommended)
 $ sudo setcap cap_net_raw=eip ./go-dispatch-proxy
 $ ./go-dispatch-proxy
 ```
+
+Tunnel mode doesn't require root privilege.
 
 ## Compiling (For Development)
 
