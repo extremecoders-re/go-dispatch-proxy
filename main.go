@@ -194,10 +194,11 @@ func parse_load_balancers(args []string, tunnel bool) {
 		}
 
 		iface := get_iface_from_ip(lb_ip)
-		if iface == "" {
-			log.Fatal("[FATAL] IP address not associated with an interface ", lb_ip)
+		if tunnel {
+			if iface == "" {
+				log.Fatal("[FATAL] IP address not associated with an interface ", lb_ip)
+			}
 		}
-
 		log.Printf("[INFO] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip, cont_ratio)
 		lb_list[idx] = load_balancer{address: fmt.Sprintf("%s:%d", lb_ip, lb_port), iface: iface, contention_ratio: cont_ratio, current_connections: 0}
 	}
