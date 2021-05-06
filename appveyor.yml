@@ -12,17 +12,12 @@ clone_depth: 1
 
 test: off
 
-# Environment variables
-environment:
-  GOPATH: c:\go-dispatch-proxy
-
 # Install upx using chocolatey
 # install:
 # - cinst upx
 
 # Build for Windows, Linux & macOS (x86 + x64)
 build_script:
-  - SET GOPATH=
   - SET GOOS=windows
   - SET GOARCH=386
   - go build -ldflags "-s -w" -o go-dispatch-proxy.win.x86.exe
