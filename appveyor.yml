@@ -20,25 +20,25 @@ test: off
 build_script:
   - SET GOOS=windows
   - SET GOARCH=386
-  - go build -ldflags -x "-s -w" -o go-dispatch-proxy.win.x86.exe
+  - go build -x -ldflags "-s -w" -o go-dispatch-proxy.win.x86.exe
   
   - SET GOARCH=amd64
-  - go build -ldflags -x "-s -w" -o go-dispatch-proxy.win.x64.exe
+  - go build -x -ldflags "-s -w" -o go-dispatch-proxy.win.x64.exe
   
   - SET GOOS=linux
   - SET GOARCH=386
-  - go build -ldflags -x "-s -w" -o go-dispatch-proxy.linux.x86
+  - go build -x -ldflags "-s -w" -o go-dispatch-proxy.linux.x86
   
   - SET GOARCH=amd64
-  - go build -ldflags -x "-s -w" -o go-dispatch-proxy.linux.x64
+  - go build -x -ldflags "-s -w" -o go-dispatch-proxy.linux.x64
 
   - SET GOOS=darwin
   - SET GOARCH=amd64
-  - go build -ldflags -x "-s -w" -o go-dispatch-proxy.macos.x64
+  - go build -x -ldflags "-s -w" -o go-dispatch-proxy.macos.x64
 
   - SET GOOS=darwin
   - SET GOARCH=arm64
-  - go build -ldflags -x "-s -w" -o go-dispatch-proxy.macos.arm64
+  - go build -x -ldflags "-s -w" -o go-dispatch-proxy.macos.arm64
 
 after_build:
 #  - upx -9 -o go-dispatch-proxy.exe go-dispatch-proxy.win.x86.exe
