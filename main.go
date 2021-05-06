@@ -159,6 +159,7 @@ func parse_load_balancers(args []string, tunnel bool) {
 
 	for idx, a := range args {
 		splitted := strings.Split(a, "@")
+		iface := ""
 		var lb_ip string
 		var lb_port int
 		var err error
@@ -193,9 +194,12 @@ func parse_load_balancers(args []string, tunnel bool) {
 			}
 		}
 
-		iface := get_iface_from_ip(lb_ip)
-		if iface == "" {
-			log.Fatal("[FATAL] IP address not associated with an interface ", lb_ip)
+		// Obtaining the interface name of the load balancer IP's doesn't make sense in tunnel mode
+		if !tunnel {
+			iface := get_iface_from_ip(lb_ip)
+			if iface == "" {
+				log.Fatal("[FATAL] IP address not associated with an interface ", lb_ip)
+			}
 		}
 
 		log.Printf("[INFO] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip, cont_ratio)
