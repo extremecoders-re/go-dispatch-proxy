@@ -196,7 +196,7 @@ func parse_load_balancers(args []string, tunnel bool) {
 
 		// Obtaining the interface name of the load balancer IP's doesn't make sense in tunnel mode
 		if !tunnel {
-			iface := get_iface_from_ip(lb_ip)
+			iface = get_iface_from_ip(lb_ip)
 			if iface == "" {
 				log.Fatal("[FATAL] IP address not associated with an interface ", lb_ip)
 			}
