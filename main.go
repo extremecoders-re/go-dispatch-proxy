@@ -250,7 +250,11 @@ func main() {
 
 	mutex = &sync.Mutex{}
 	for {
-		conn, _ := l.Accept()
-		go handle_connection(conn, *tunnel)
+		conn, err := l.Accept()
+		if err != nil {
+			log.Println("[WARN] Could not accept connection")
+		} else {
+			go handle_connection(conn, *tunnel)
+		}
 	}
 }
