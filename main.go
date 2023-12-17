@@ -29,7 +29,7 @@ var lb_list []load_balancer
 var mutex *sync.Mutex
 
 /*
-	Get a load balancer according to contention ratio
+Get a load balancer according to contention ratio
 */
 func get_load_balancer() *load_balancer {
 	mutex.Lock()
@@ -49,7 +49,7 @@ func get_load_balancer() *load_balancer {
 }
 
 /*
-	Joins the local and remote connections together
+Joins the local and remote connections together
 */
 func pipe_connections(local_conn, remote_conn net.Conn) {
 	go func() {
@@ -72,7 +72,7 @@ func pipe_connections(local_conn, remote_conn net.Conn) {
 }
 
 /*
-	Handle connections in tunnel mode
+Handle connections in tunnel mode
 */
 func handle_tunnel_connection(conn net.Conn) {
 	load_balancer := get_load_balancer()
@@ -91,7 +91,7 @@ func handle_tunnel_connection(conn net.Conn) {
 }
 
 /*
-	Calls the apprpriate handle_connections based on tunnel mode
+Calls the apprpriate handle_connections based on tunnel mode
 */
 func handle_connection(conn net.Conn, tunnel bool) {
 	if tunnel {
@@ -102,8 +102,8 @@ func handle_connection(conn net.Conn, tunnel bool) {
 }
 
 /*
-	Detect the addresses which can  be used for dispatching in non-tunnelling mode.
-	Alternate to ipconfig/ifconfig
+Detect the addresses which can  be used for dispatching in non-tunnelling mode.
+Alternate to ipconfig/ifconfig
 */
 func detect_interfaces() {
 	fmt.Println("--- Listing the available adresses for dispatching")
@@ -125,7 +125,7 @@ func detect_interfaces() {
 }
 
 /*
-	Gets the interface associated with the IP
+Gets the interface associated with the IP
 */
 func get_iface_from_ip(ip string) string {
 	ifaces, _ := net.Interfaces()
@@ -148,7 +148,7 @@ func get_iface_from_ip(ip string) string {
 }
 
 /*
-	Parses the command line arguements to obtain the list of load balancers
+Parses the command line arguements to obtain the list of load balancers
 */
 func parse_load_balancers(args []string, tunnel bool) {
 	if len(args) == 0 {
@@ -160,55 +160,58 @@ func parse_load_balancers(args []string, tunnel bool) {
 	for idx, a := range args {
 		splitted := strings.Split(a, "@")
 		iface := ""
-		var lb_ip string
+		// IP address of a Fully Qualified Domain Name of the load balancer
+		var lb_ip_or_fqdn string
 		var lb_port int
 		var err error
 
 		if tunnel {
-			ip_port := strings.Split(splitted[0], ":")
-			if len(ip_port) != 2 {
+			ip_or_fqdn_port := strings.Split(splitted[0], ":")
+			if len(ip_or_fqdn_port) != 2 {
 				log.Fatal("[FATAL] Invalid address specification ", splitted[0])
 				return
 			}
 
-			lb_ip = ip_port[0]
-			lb_port, err = strconv.Atoi(ip_port[1])
+			lb_ip_or_fqdn = ip_or_fqdn_port[0]
+			lb_port, err = strconv.Atoi(ip_or_fqdn_port[1])
 			if err != nil || lb_port <= 0 || lb_port > 65535 {
 				log.Fatal("[FATAL] Invalid port ", splitted[0])
 				return
 			}
 
 		} else {
-			lb_ip = splitted[0]
+			lb_ip_or_fqdn = splitted[0]
 			lb_port = 0
 		}
 
-		if net.ParseIP(lb_ip).To4() == nil {
-			log.Fatal("[FATAL] Invalid address ", lb_ip)
+		// FQDN not supported for tunnel modes
+		if !tunnel && net.ParseIP(lb_ip_or_fqdn).To4() == nil {
+			log.Fatal("[FATAL] Invalid address ", lb_ip_or_fqdn)
 		}
+
 		var cont_ratio int = 1
 		if len(splitted) > 1 {
 			cont_ratio, err = strconv.Atoi(splitted[1])
 			if err != nil || cont_ratio <= 0 {
-				log.Fatal("[FATAL] Invalid contention ratio for ", lb_ip)
+				log.Fatal("[FATAL] Invalid contention ratio for ", lb_ip_or_fqdn)
 			}
 		}
 
 		// Obtaining the interface name of the load balancer IP's doesn't make sense in tunnel mode
 		if !tunnel {
-			iface = get_iface_from_ip(lb_ip)
+			iface = get_iface_from_ip(lb_ip_or_fqdn)
 			if iface == "" {
-				log.Fatal("[FATAL] IP address not associated with an interface ", lb_ip)
+				log.Fatal("[FATAL] IP address not associated with an interface ", lb_ip_or_fqdn)
 			}
 		}
 
-		log.Printf("[INFO] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip, cont_ratio)
-		lb_list[idx] = load_balancer{address: fmt.Sprintf("%s:%d", lb_ip, lb_port), iface: iface, contention_ratio: cont_ratio, current_connections: 0}
+		log.Printf("[INFO] Load balancer %d: %s, contention ratio: %d\n", idx+1, lb_ip_or_fqdn, cont_ratio)
+		lb_list[idx] = load_balancer{address: fmt.Sprintf("%s:%d", lb_ip_or_fqdn, lb_port), iface: iface, contention_ratio: cont_ratio, current_connections: 0}
 	}
 }
 
 /*
-	Main function
+Main function
 */
 func main() {
 	var lhost = flag.String("lhost", "127.0.0.1", "The host to listen for SOCKS connection")

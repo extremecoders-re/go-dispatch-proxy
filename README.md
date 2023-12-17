@@ -57,7 +57,7 @@ D:\>go-dispatch-proxy.exe -lhost 192.168.1.2 -lport 5566 10.81.177.215 192.168.1
 [INFO] SOCKS server started at 192.168.1.2:5566
 ```
 
-Out of 5 consecutive connections, the first 3 are routed to `10.81.201.18` and the remaining 2 to `192.168.1.2`. The SOCKS server is started by default on `127.0.0.1:8080`. It can be changed using the `-lhost` and `lport` directive.
+Out of 5 consecutive connections, the first 3 are routed to `10.81.201.18` and the remaining 2 to `192.168.1.2`. The SOCKS server is started by default on `127.0.0.1:8080`. It can be changed using the `-lhost` and `-lport` directive.
 
 Now change the proxy settings of your browser, download manager etc to point to the above address (eg `127.0.0.1:8080`). Be sure to add this as a SOCKS v5 proxy and NOT as a HTTP/S proxy.
 
@@ -80,7 +80,11 @@ Next, launch go-dispatch-proxy using the `-tunnel` argument.
 D:\> go-dispatch-proxy.exe -tunnel 127.0.0.1:7777 127.0.0.1:7778
 ```
 
-Both the IP and port must be mentioned while specifying the load balancer addresses. 
+Both the IP and port must be mentioned while specifying the load balancer addresses. Also instead of specifying the IP address a domain can be specified, hence the following also works.
+
+```
+D:\> go-dispatch-proxy.exe -tunnel proxy1.com:7777 proxy2.com:7778
+``` 
 
 Optionally, the listening host, port and contention ratio can also be specified like in example 2.
 
