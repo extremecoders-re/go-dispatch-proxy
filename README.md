@@ -21,7 +21,7 @@ The example below are shown on Windows. The steps are similar for other platform
 
 ### 1 - Load balance connections
 
-The primary purpose of the tool is to combine multiple internet connections into one. For this we need to know the IP addresses of the interface we wish to combine. You can obtain the IP addresses using the `ipconfig` (`ifconfig` on linux) command. Alternatively run `go-dispatch-proxy -list`.
+The primary purpose of the tool is to combine multiple internet connections into one. For this we need to know the IP addresses of the interface we wish to combine. You can obtain the IP addresses using the `ipconfig` (`ip a` on linux) command. Alternatively run `go-dispatch-proxy -list`.
 
 ```
 D:\>go-dispatch-proxy.exe -list
