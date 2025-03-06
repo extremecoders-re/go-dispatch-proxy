@@ -46,6 +46,7 @@ func get_load_balancer(params ...interface{}) (*load_balancer, int) {
 		}
 		if seed < 0 || seed >= len(lb_list) || _bitset == nil {
 			seed = -1
+			_bitset = nil
 		}
 		log.Println("[DEBUG] Try to get different load balancer of", seed)
 	}
