@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"math/big"
 )
 
 type load_balancer struct {
@@ -31,10 +32,44 @@ var mutex *sync.Mutex
 /*
 Get a load balancer according to contention ratio
 */
-func get_load_balancer() *load_balancer {
+func get_load_balancer(params ...interface{}) (*load_balancer, int) {
+	var _bitset *big.Int
+	if len(params) > 0 {
+		seed := -1
+		for _, p := range params {
+			switch v := p.(type) {
+			case int:
+				seed = v
+			case *big.Int:
+				_bitset = v
+			}
+		}
+		if seed < 0 || seed >= len(lb_list) || _bitset == nil {
+			seed = -1
+		}
+		log.Println("[DEBUG] Try to get different load balancer of", seed)
+	}
+
 	mutex.Lock()
+	if _bitset != nil {
+		for {
+			if _bitset.Bit(lb_index) != 0 {
+				lb := &lb_list[lb_index]
+				lb.current_connections = 0
+				lb_index += 1
+
+				if lb_index == len(lb_list) {
+					lb_index = 0
+				}
+			} else {
+				break
+			}
+		}
+	}
+
 	lb := &lb_list[lb_index]
 	lb.current_connections += 1
+	ilb := lb_index
 
 	if lb.current_connections == lb.contention_ratio {
 		lb.current_connections = 0
@@ -45,7 +80,7 @@ func get_load_balancer() *load_balancer {
 		}
 	}
 	mutex.Unlock()
-	return lb
+	return lb,ilb
 }
 
 /*
@@ -75,18 +110,41 @@ func pipe_connections(local_conn, remote_conn net.Conn) {
 Handle connections in tunnel mode
 */
 func handle_tunnel_connection(conn net.Conn) {
-	load_balancer := get_load_balancer()
+	load_balancer, i := get_load_balancer()
+	var _bitset *big.Int
+	complete := 1 == len(lb_list)
 
+retry:
 	remote_addr, _ := net.ResolveTCPAddr("tcp4", load_balancer.address)
 	remote_conn, err := net.DialTCP("tcp4", nil, remote_addr)
 
 	if err != nil {
-		log.Println("[WARN]", load_balancer.address, fmt.Sprintf("{%s}", err))
+		log.Println("[WARN]", load_balancer.address, fmt.Sprintf("{%s}", err), "LB:", i)
+
+		if !complete && _bitset == nil {
+			bits := make([]byte, (len(lb_list)+7)/8)
+			_bitset = new(big.Int).SetBytes(bits)
+		}
+
+		if !complete {
+			_bitset.SetBit(_bitset, i, 1)
+
+			// Check if all balancers are used
+			mask := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), uint(len(lb_list))), big.NewInt(1))
+			complete = new(big.Int).And(_bitset, mask).Cmp(mask) == 0
+		}
+
+		if !complete {
+			load_balancer, i = get_load_balancer(i, _bitset)
+			goto retry
+		}
+
+		log.Println("[WARN]", "all load balancers failed")
 		conn.Close()
 		return
 	}
 
-	log.Println("[DEBUG] Tunnelled to", load_balancer.address)
+	log.Println("[DEBUG] Tunnelled to", load_balancer.address, "LB:", i)
 	pipe_connections(conn, remote_conn)
 }
 
