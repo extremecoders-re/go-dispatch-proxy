@@ -218,6 +218,7 @@ func main() {
 	var lport = flag.Int("lport", 8080, "The local port to listen for SOCKS connection")
 	var detect = flag.Bool("list", false, "Shows the available addresses for dispatching (non-tunnelling mode only)")
 	var tunnel = flag.Bool("tunnel", false, "Use tunnelling mode (acts as a transparent load balancing proxy)")
+	var quiet = flag.Bool("quiet", false, "disable logs")
 
 	flag.Parse()
 	if *detect {
@@ -250,6 +251,10 @@ func main() {
 	}
 	log.Println("[INFO] Local server started on ", local_bind_address)
 	defer l.Close()
+
+	if (*quiet) {
+		log.SetOutput(io.Discard)
+	}
 
 	mutex = &sync.Mutex{}
 	for {
