@@ -142,3 +142,7 @@ $ GOOS=darwin GOARCH=amd64 go build
 ## License
 
 Licensed under MIT
+
+## Community
+
+- **Go Dispatch Proxy GUI**: A simple gui for go-dispatch-proxy (https://github.com/gulp79/go-dispatch-proxy-gui)
